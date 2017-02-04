@@ -5,3 +5,7 @@ build/
 Debug_EMS/
 Release_EMS/
 Debug/
+*.vpj
+*.vpw
+*.vtg
+*.vpwhistu
