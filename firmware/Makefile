@@ -33,7 +33,7 @@ endif
 
 # Linker extra options here.
 ifeq ($(USE_LDOPT),)
-  USE_LDOPT = 
+  USE_LDOPT =
 endif
 
 # Enable this if you want link time optimizations (LTO)
@@ -233,7 +233,7 @@ INCDIR = $(PORTINC) $(KERNINC) $(TESTINC) \
 MCU  = cortex-m4
 
 #TRGT = arm-elf-
-TRGT = arm-none-eabi-
+TRGT = $(TOOLCHAIN_PREFIX)arm-none-eabi-
 CC   = $(TRGT)gcc
 CPPC = $(TRGT)g++
 # Enable loading with g++ only if you need C++ runtime support.
