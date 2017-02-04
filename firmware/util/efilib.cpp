@@ -53,15 +53,35 @@ uint32_t efiStrlen(const char *param) {
 	return (s - param);
 }
 
-char * efiTrim(char *param) {
-	while (param[0] == ' ') {
-		param++; // that would skip leading spaces
-	}
-	int len = efiStrlen(param);
-	while (len > 0 && param[len - 1] == ' ') {
-		param[len - 1] = 0;
-		len--;
-	}
+/* Skip leading spaces from str. */
+static inline char * trim_start(char * str)
+{
+    while (*str == ' ')
+    {
+        str++;
+    }
+
+    return str;
+}
+
+/* Remove trailing spaces from str. */
+static inline void trim_tail(char * str)
+{
+    int len = efiStrlen(str);
+
+    while (len > 0 && str[len - 1] == ' ')
+    {
+        str[len - 1] = 0;
+        len--;
+    }
+}
+
+/* Remove leading and trailing spaces from param. */
+char * efiTrim(char * param)
+{
+    param = trim_start(param);
+    trim_tail(param);
+
 	return param;
 }
 
@@ -117,7 +137,8 @@ int atoi(const char *string) {
 static char todofixthismesswithcopy[100];
 
 /**
- * WARNING: due to implementation details specifid buffer should be at least size of '_MAX_FILLER'
+ * WARNING: due to implementation details specified buffer should be at least size of '_MAX_FILLER'
+ * should be at least size of '_MAX_FILLER' 
  */
 static char *ltoa_internal(char *p, long num, unsigned radix) {
 	int i;

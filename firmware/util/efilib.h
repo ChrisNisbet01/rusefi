@@ -45,7 +45,12 @@ int indexOf(const char *string, char ch);
 float atoff(const char *string);
 int atoi(const char *string);
 
+#if defined(USE_HOMEGROWN_NAN)
 #define cisnan(f) (*(((int*) (&f))) == 0x7FC00000)
+#else
+#define cisnan(f) ((f) == NAN)
+#endif
+
 #define UNUSED(x) (void)(x)
   
 int absI(int32_t value);

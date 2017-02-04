@@ -233,7 +233,7 @@ void runRusEfi(void) {
 void chDbgStackOverflowPanic(Thread *otp) {
 	strcpy(panicMessage, "stack overflow: ");
 #if defined(CH_USE_REGISTRY) || defined(__DOXYGEN__)
-	int p_name_len = strlen(otp->p_name);
+	size_t p_name_len = strlen(otp->p_name);
 	if (p_name_len < sizeof(panicMessage) - 2)
 		strcat(panicMessage, otp->p_name);
 #endif

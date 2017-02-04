@@ -141,7 +141,7 @@ static uint8_t read_buffer[2][BLOCK_SIZE_INCREMENT];
 
 
 inline uint32_t swap_uint32( uint32_t val ) {
-    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF );
+    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0x00FF00FF );
     return ((val << 16) & 0xFFFF0000) | ((val >> 16) & 0x0000FFFF);
 }
 

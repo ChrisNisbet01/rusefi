@@ -75,6 +75,7 @@ static Logging *logger;
 
 float getLEValue(Engine *engine, calc_stack_t *s, le_action_e action) {
 	engine_configuration_s *engineConfiguration = engine->engineConfiguration;
+    UNUSED(s);
 	efiAssert(engine!=NULL, "getLEValue", NAN);
 	switch (action) {
 	case LE_METHOD_FAN:

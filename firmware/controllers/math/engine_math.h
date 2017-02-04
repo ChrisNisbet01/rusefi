@@ -31,17 +31,18 @@ void setInjectorLag(float value DECLARE_ENGINE_PARAMETER_S);
  * I guess this implementation would be faster than 'angle % engineCycle'
  */
 #define fixAngle(angle, msg)														\
-	{																		\
-		assertAngleRange(angle, msg);											\
-		float engineCycleDurationLocalCopy = ENGINE(engineCycle);	        \
-		/* todo: split this method into 'fixAngleUp' and 'fixAngleDown'*/   \
-		/*       as a performance optimization?*/                           \
-		while (angle < 0)                       							\
-			angle += engineCycleDurationLocalCopy;   						\
-			/* todo: would 'if' work as good as 'while'? */                 \
-		while (angle >= engineCycleDurationLocalCopy)						\
-			angle -= engineCycleDurationLocalCopy;   						\
-	}
+    do \
+    { \
+            assertAngleRange(angle, msg);											\
+            float engineCycleDurationLocalCopy = ENGINE(engineCycle);	        \
+            /* todo: split this method into 'fixAngleUp' and 'fixAngleDown'*/   \
+            /*       as a performance optimization?*/                           \
+            while (angle < 0)                       							\
+                angle += engineCycleDurationLocalCopy;   						\
+                /* todo: would 'if' work as good as 'while'? */                 \
+            while (angle >= engineCycleDurationLocalCopy)						\
+                angle -= engineCycleDurationLocalCopy;   						\
+    } while (0) 
 
 /**
  * @return time needed to rotate crankshaft by one degree, in milliseconds.
