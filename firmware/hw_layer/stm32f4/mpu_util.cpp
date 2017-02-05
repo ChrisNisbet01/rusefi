@@ -204,119 +204,275 @@ void HardFaultVector(void) {
 }
 
 #if HAL_USE_SPI || defined(__DOXYGEN__)
+
 bool isSpiInitialized[5] = { false, false, false, false, false };
 
-static int getSpiAf(SPIDriver *driver) {
+typedef struct spi_config_st
+{
+    SPIDriver * driver;
+    int alternate_function;
+
+    brain_pin_e(* get_SPI_sck_pin)(board_configuration_s * board_configuration);
+    int(* get_SPI_sck_mode)(engine_configuration_s * engine_configuration);
+
+    brain_pin_e(* get_SPI_miso_pin)(board_configuration_s * board_configuration);
+    int (* get_SPI_miso_mode)(engine_configuration_s * engine_configuration);
+
+    brain_pin_e(* get_SPI_mosi_pin)(board_configuration_s * board_configuration);
+    int (* get_SPI_mosi_mode)(engine_configuration_s * engine_configuration);
+
+} spi_config_st;
+
+static brain_pin_e get_unassigned_miso_pin(board_configuration_s * board_configuration)
+{
+    UNUSED(board_configuration);
+
+    return GPIO_UNASSIGNED;
+}
+
+static brain_pin_e get_SPI1_miso_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi1misoPin;
+}
+
+static brain_pin_e get_SPI2_miso_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi2misoPin;
+}
+
+static brain_pin_e get_SPI3_miso_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi3misoPin;
+}
+
+static brain_pin_e get_unassigned_mosi_pin(board_configuration_s * board_configuration)
+{
+    UNUSED(board_configuration);
+
+    return GPIO_UNASSIGNED;
+}
+
+static brain_pin_e get_SPI1_mosi_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi1mosiPin;
+}
+
+static brain_pin_e get_SPI2_mosi_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi2mosiPin;
+}
+
+static brain_pin_e get_SPI3_mosi_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi3mosiPin;
+}
+
+static brain_pin_e get_unassigned_sck_pin(board_configuration_s * board_configuration)
+{
+    UNUSED(board_configuration);
+
+    return GPIO_UNASSIGNED;
+}
+
+static brain_pin_e get_SPI1_sck_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi1sckPin;
+}
+
+static brain_pin_e get_SPI2_sck_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi2sckPin;
+}
+
+static brain_pin_e get_SPI3_sck_pin(board_configuration_s * board_configuration)
+{
+    return board_configuration->spi3sckPin;
+}
+
+static int get_SPI_default_sck_mode(engine_configuration_s * engine_configuration)
+{
+    UNUSED(engine_configuration);
+
+    return 0;
+}
+
+static int get_SPI_default_miso_mode(engine_configuration_s * engine_configuration)
+{
+    UNUSED(engine_configuration);
+
+    return 0;
+}
+
+static int get_SPI_default_mosi_mode(engine_configuration_s * engine_configuration)
+{
+    UNUSED(engine_configuration);
+
+    return 0;
+}
+
+static int get_SPI2_sck_mode(engine_configuration_s * engine_configuration)
+{
+    return engine_configuration->spi2SckMode;
+}
+
+static int get_SPI2_miso_mode(engine_configuration_s * engine_configuration)
+{
+    return engine_configuration->spi2MisoMode;
+}
+
+static int get_SPI2_mosi_mode(engine_configuration_s * engine_configuration)
+{
+    return engine_configuration->spi2MosiMode;
+}
+
+static spi_config_st const spi_configs[] =
+{
+    [SPI_NONE] = 
+    {
+        .driver = NULL,
+        .alternate_function = -1,
+        .get_SPI_sck_pin = get_unassigned_sck_pin,
+        .get_SPI_sck_mode = get_SPI_default_sck_mode,
+        .get_SPI_miso_pin = get_unassigned_miso_pin,
+        .get_SPI_miso_mode = get_SPI_default_miso_mode,
+        .get_SPI_mosi_pin = get_unassigned_mosi_pin,
+        .get_SPI_mosi_mode = get_SPI_default_mosi_mode
+    }
 #if STM32_SPI_USE_SPI1
-	if (driver == &SPID1) {
-		return EFI_SPI1_AF;
-	}
+    , [SPI_DEVICE_1] =
+    {
+        .driver = &SPID1,
+        .alternate_function = EFI_SPI1_AF,
+        .get_SPI_sck_pin = get_SPI1_sck_pin,
+        .get_SPI_sck_mode = get_SPI_default_sck_mode,
+        .get_SPI_miso_pin = get_SPI1_miso_pin,
+        .get_SPI_miso_mode = get_SPI_default_miso_mode,
+        .get_SPI_mosi_pin = get_SPI1_mosi_pin,
+        .get_SPI_mosi_mode = get_SPI_default_mosi_mode
+    }
 #endif
 #if STM32_SPI_USE_SPI2
-	if (driver == &SPID2) {
-		return EFI_SPI2_AF;
-	}
+    , [SPI_DEVICE_2] =
+    {
+        .driver = &SPID2,
+        .alternate_function = EFI_SPI2_AF,
+        .get_SPI_sck_pin = get_SPI2_sck_pin,
+        .get_SPI_sck_mode = get_SPI2_sck_mode,
+        .get_SPI_miso_pin = get_SPI2_miso_pin,
+        .get_SPI_miso_mode = get_SPI2_miso_mode,
+        .get_SPI_mosi_pin = get_SPI2_mosi_pin,
+        .get_SPI_mosi_mode = get_SPI2_mosi_mode
+    }
 #endif
 #if STM32_SPI_USE_SPI3
-	if (driver == &SPID3) {
-		return EFI_SPI3_AF;
-	}
+    , [SPI_DEVICE_3] =
+    {
+        .driver = &SPID3,
+        .alternate_function = EFI_SPI3_AF,
+        .get_SPI_sck_pin = get_SPI3_sck_pin,
+        .get_SPI_sck_mode = get_SPI_default_sck_mode,
+        .get_SPI_miso_pin = get_SPI3_miso_pin,
+        .get_SPI_miso_mode = get_SPI_default_miso_mode,
+        .get_SPI_mosi_pin = get_SPI3_mosi_pin,
+        .get_SPI_mosi_mode = get_SPI_default_mosi_mode
+    }
 #endif
-	return -1;
+};
+#define SPI_CONFIG_SIZE ((size_t)sizeof(spi_configs) / (size_t)sizeof(spi_configs[0]))
+
+spi_config_st const * get_SPI_config(spi_device_e const device)
+{
+    spi_config_st const * spi_config;
+
+    if (device >= 0 && device < SPI_CONFIG_SIZE && spi_configs[device].driver != NULL)
+    {
+        spi_config = &spi_configs[device];
+    }
+    else
+    {
+        spi_config = NULL;
+    }
+
+    return spi_config;
 }
 
 brain_pin_e getMisoPin(spi_device_e device) {
-	switch(device) {
-	case SPI_DEVICE_1:
-		return boardConfiguration->spi1misoPin;
-	case SPI_DEVICE_2:
-		return boardConfiguration->spi2misoPin;
-	case SPI_DEVICE_3:
-		return boardConfiguration->spi3misoPin;
-	default:
-		break;
-	}
-	return GPIO_UNASSIGNED;
+    spi_config_st const * const spi_config = get_SPI_config(device);
+    brain_pin_e miso_pin;
+
+    if (spi_config == NULL)
+    {
+        miso_pin = GPIO_UNASSIGNED;
+    }
+    else
+    {
+        miso_pin = spi_config->get_SPI_miso_pin(boardConfiguration);
+    }
+
+    return miso_pin;
 }
 
 brain_pin_e getMosiPin(spi_device_e device) {
-	switch(device) {
-	case SPI_DEVICE_1:
-		return boardConfiguration->spi1mosiPin;
-	case SPI_DEVICE_2:
-		return boardConfiguration->spi2mosiPin;
-	case SPI_DEVICE_3:
-		return boardConfiguration->spi3mosiPin;
-	default:
-		break;
-	}
-	return GPIO_UNASSIGNED;
+    spi_config_st const * const spi_config = get_SPI_config(device);
+    brain_pin_e mosi_pin;
+
+    if (spi_config == NULL)
+    {
+        mosi_pin = GPIO_UNASSIGNED;
+    }
+    else
+    {
+        mosi_pin = spi_config->get_SPI_mosi_pin(boardConfiguration);
+    }
+
+    return mosi_pin;
 }
 
 brain_pin_e getSckPin(spi_device_e device) {
-	switch(device) {
-	case SPI_DEVICE_1:
-		return boardConfiguration->spi1sckPin;
-	case SPI_DEVICE_2:
-		return boardConfiguration->spi2sckPin;
-	case SPI_DEVICE_3:
-		return boardConfiguration->spi3sckPin;
-	default:
-		break;
-	}
-	return GPIO_UNASSIGNED;
+    spi_config_st const * const spi_config = get_SPI_config(device);
+    brain_pin_e sck_pin;
+
+    if (spi_config == NULL)
+    {
+        sck_pin = GPIO_UNASSIGNED;
+    }
+    else
+    {
+        sck_pin = spi_config->get_SPI_sck_pin(boardConfiguration);
+    }
+
+    return sck_pin;
+}
+
+static void initSpiModule(spi_config_st const * const spi_config) {
+
+    mySetPadMode2("SPI clock",
+                  spi_config->get_SPI_sck_pin(boardConfiguration),
+                  PAL_MODE_ALTERNATE(spi_config->alternate_function) + spi_config->get_SPI_sck_mode(engineConfiguration));
+
+    mySetPadMode2("SPI master out",
+                  spi_config->get_SPI_mosi_pin(boardConfiguration),
+                  PAL_MODE_ALTERNATE(spi_config->alternate_function) + spi_config->get_SPI_mosi_mode(engineConfiguration));
+
+    mySetPadMode2("SPI master in",
+                  spi_config->get_SPI_miso_pin(boardConfiguration),
+                  PAL_MODE_ALTERNATE(spi_config->alternate_function) + spi_config->get_SPI_miso_mode(engineConfiguration));
 }
 
 void turnOnSpi(spi_device_e device) {
-	if (isSpiInitialized[device])
+    spi_config_st const * const spi_config = get_SPI_config(device);
+
+    if (spi_config == NULL) {
+        /* XXX - Log a message? */
+        return;
+    }
+    if (isSpiInitialized[device]) {
 		return; // already initialized
-	isSpiInitialized[device] = true;
-	if (device == SPI_DEVICE_1) {
-// todo: introduce a nice structure with all fields for same SPI
-#if STM32_SPI_USE_SPI1
-//	scheduleMsg(&logging, "Turning on SPI1 pins");
-		initSpiModule(&SPID1, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device),
-				0,
-				0,
-				0);
-#endif /* STM32_SPI_USE_SPI1 */
-	}
-	if (device == SPI_DEVICE_2) {
-#if STM32_SPI_USE_SPI2
-//	scheduleMsg(&logging, "Turning on SPI2 pins");
-		initSpiModule(&SPID2, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device),
-				engineConfiguration->spi2SckMode,
-				engineConfiguration->spi2MosiMode,
-				engineConfiguration->spi2MisoMode);
-#endif /* STM32_SPI_USE_SPI2 */
-	}
-	if (device == SPI_DEVICE_3) {
-#if STM32_SPI_USE_SPI3
-//	scheduleMsg(&logging, "Turning on SPI3 pins");
-		initSpiModule(&SPID3, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device),
-				0,
-				0,
-				0);
-#endif /* STM32_SPI_USE_SPI3 */
-	}
-}
+    }
 
-void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso,
-		brain_pin_e mosi,
-		int sckMode,
-		int mosiMode,
-		int misoMode) {
+    initSpiModule(spi_config);
 
-	mySetPadMode2("SPI clock", sck,	PAL_MODE_ALTERNATE(getSpiAf(driver)) + sckMode);
-
-	mySetPadMode2("SPI master out", mosi, PAL_MODE_ALTERNATE(getSpiAf(driver)) + mosiMode);
-	mySetPadMode2("SPI master in ", miso, PAL_MODE_ALTERNATE(getSpiAf(driver)) + misoMode);
+    isSpiInitialized[device] = true;
 }
 
 void initSpiCs(SPIConfig *spiConfig, brain_pin_e csPin) {

@@ -432,7 +432,7 @@ typedef enum {
 	SPI_DEVICE_3 = 3,
 	SPI_DEVICE_4 = 4,
 
-	Force_4b_spi_device = ENUM_32_BITS,
+	Force_4b_spi_device = ENUM_32_BITS
 } spi_device_e;
 
 /**

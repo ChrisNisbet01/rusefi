@@ -64,9 +64,4 @@ void HardFaultVector(void);
 
 #endif /* MPU_UTIL_H_ */
 
-void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso,
-		brain_pin_e mosi,
-		int sckMode,
-		int mosiMode,
-		int misoMode);
 void initSpiCs(SPIConfig *spiConfig, brain_pin_e csPin);
