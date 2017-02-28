@@ -610,7 +610,7 @@ void handleTestCommand(ts_channel_s *tsChannel) {
 	 * Please note that this response is a magic constant used by dev console for protocol detection
 	 * @see EngineState#TS_PROTOCOL_TAG
 	 */
-	tunerStudioWriteData(tsChannel, (const uint8_t *) " ts_p_alive\r\n", 8);
+	tunerStudioWriteData(tsChannel, (const uint8_t *) " ts_p_alive\r\n", 13);
 }
 
 extern CommandHandler console_line_callback;
