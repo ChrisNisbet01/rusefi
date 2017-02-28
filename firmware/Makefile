@@ -3,6 +3,12 @@
 # NOTE: Can be overridden externally.
 #
 
+# location of OpenOCD Board .cfg files (only used with 'make program')
+OPENOCD_BOARD_DIR=../misc/openocd
+
+# Configuration (cfg) file containing programming directives for OpenOCD
+OPENOCD_PROC_FILE=../misc/openocd/stm32f4-openocd.cfg
+
 PROJECT_DIR = .
 
 # by default EXTRA_PARAMS is empty and we create 'debug' version of the firmware with additional assertions and statistics
@@ -312,3 +318,7 @@ ULIBS = -lm
 
 RULESPATH = $(CHIBIOS)/os/ports/GCC/ARMCMx
 include $(RULESPATH)/rules.mk
+
+program:
+	openocd -f $(OPENOCD_BOARD_DIR)/stm32f4discovery.cfg -f $(OPENOCD_PROC_FILE) -c "stm_flash $(BUILDDIR)/$(PROJECT).bin" -c shutdown
+
